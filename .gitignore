@@ -4,3 +4,7 @@
 /.vscode
 /temp
 /ocloop-backend/src/ocloop/envs/local_setting.py
+/.env
+.env
+.env.*
+!.env.example
