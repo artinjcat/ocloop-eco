@@ -1,0 +1,70 @@
+services:
+  nginx:
+    build: ./nginx
+    image: nginx
+    container_name: nginx_ocloop
+    ports:
+      - 80:80
+    depends_on:
+      - ocloop
+    volumes:
+      - ./ocloop-backend/src:/src
+      - static-vol:/vol/web/static
+      - media-vol:/vol/web/media
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    # restart: unless-stopped
+
+  ocloop:
+    build:
+      context: ./ocloop-backend
+      dockerfile: development/Dockerfile
+    command: >
+      sh -c "python manage.py collectstatic --noinput &&
+      python manage.py migrate &&
+      python manage.py runserver 0.0.0.0:8000"
+    # python manage.py makemigrations &&
+    # gunicorn ocloop_player.wsgi --bind 0.0.0.0:8000"
+    # ports:
+    #   - "8000:8000"
+    volumes:
+      - ./ocloop-backend/src:/src
+      - static-vol:/vol/web/static
+      - media-vol:/vol/web/media
+    depends_on:
+      db:
+        condition: service_healthy
+    # restart: unless-stopped
+  redis:
+    image: redis:latest
+    container_name: redis_ocloop
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    # restart: always
+    # restart: unless-stopped
+
+  db:
+    image: postgres:18.4
+    container_name: ocloop_db
+    ports:
+      # don't use port in production, use docker network instead
+      - "5432:5432"
+    volumes:
+      - ocloop-db:/var/lib/postgresql
+    environment:
+      - POSTGRES_DB=ocloop
+      - POSTGRES_USER=ocloop
+      - POSTGRES_PASSWORD=sql@Oar3da70008100
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+    # restart: unless-stopped
+
+volumes:
+  ocloop-db:
+  static-vol:
+  media-vol:
+  redis-data:

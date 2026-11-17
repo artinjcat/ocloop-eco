@@ -1,0 +1,6 @@
+
+
+/.django-stub-gen
+/.vscode
+/temp
+/ocloop-backend/src/ocloop/envs/local_setting.py
